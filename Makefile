@@ -7,7 +7,7 @@ run:
 	uv run main.py
 
 debug:
-	uv run -m pdb main.py
+	uv run python -m pdb main.py
 
 clean:
 	rm -rf __pycache__ .mypy_cache .python-version
@@ -18,9 +18,9 @@ fclean: clean
 re: fclean install
 
 lint:
-	uv run flake8
-	uv run mypy --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
+	uv run flake8 .
+	uv run mypy . --warn-return-any --warn-unused-ignores --ignore-missing-imports --disallow-untyped-defs --check-untyped-defs
 
 lint-strict:
-	uv run flake8
-	uv run mypy --strict
+	uv run flake8 .
+	uv run mypy . --strict
