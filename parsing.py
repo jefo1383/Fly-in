@@ -1,6 +1,7 @@
 import argparse
 from pydantic import BaseModel, Field, ValidationError
 from typing import Optional, Any
+import sys
 
 
 class HubData(BaseModel):
@@ -28,8 +29,8 @@ class LinkData(BaseModel):
         max_link_capacity (int): Maximum drones allowed
         on the link simultaneously.
     """
-    hub_a: str
-    hub_b: str
+    hub_1: str
+    hub_2: str
     max_link_capacity: int = Field(ge=1, default=1)
 
 
@@ -90,7 +91,7 @@ def parse_metadata(metadata_str: str) -> dict[str, str]:
 
 
 def parse_map_file(filepath: str) -> dict[str, Any]:
-    """Parses the input simulation file and builds the network graph.
+    """Parses the input simulation file.
 
     Reads the file line by line, extracting the number of drones,
     hubs data and connection data.
@@ -100,32 +101,74 @@ def parse_map_file(filepath: str) -> dict[str, Any]:
         filepath (str): The path to the input map file.
 
     Raises:
-        ValueError: If a parsing error occurs or a zone type is invalid.
+        ValueError: If a parsing error occurs.
+        ValidationError: If a type or name doesn't match pydantic's.
 
     Return:
-        A list of dictionnaries containing the differents data type.
+        A dictionnarie containing the differents data type.
     """
-    config: dict[str, Any] = {}
-    with open(filepath, 'r', encoding='utf-8') as file:
-        for line in file:
-            clean_line: str = line.strip()
-            if not clean_line or clean_line.startswith('#'):
-                continue
-            data = clean_line.split(":")
-            if data[0] == "start_hub":
-                start_data = data[1].split()
-                config["start_hub"] = {"name": start_data[0], "x": start_data[1], "y": start_data[2]}
-                if start_data[3]:
-                    optional = parse_metadata(start_data[3])
-                    config["start_hub"].update(optional)
-            if data[0] == "end_hub":
-                end_data = data[1].split()
-                config["end_hub"] = {"name": end_data[0], "x": end_data[1], "y": end_data[2]}
-                if end_data[3]:
-                    optional = parse_metadata(end_data[3])
-                    config["end_hub"].update(optional)
-            if data[0] == "hub":
-                if data[0] not in config:
-                    hub: list[dict[str, str]] = []
-                    config["hub"] = hub
-                    
+    config: dict[str, Any] = {
+        "nb_drones": 0,
+        "start_hub": None,
+        "end_hub": None,
+        "hubs": [],
+        "connections": []
+    }
+    try:
+        with open(filepath, 'r', encoding='utf-8') as file:
+            for line in file:
+                clean_line: str = line.strip()
+                if not clean_line or clean_line.startswith('#'):
+                    continue
+
+                data = clean_line.split(":", 1)
+                if len(data) != 2:
+                    continue
+                prefix: str = data[0].strip()
+                content: str = data[1].strip()
+
+                base_str: str = content
+                meta_str: str = ""
+                if "[" in content:
+                    base_str, meta_str = content.split("[", 1)
+                    meta_str = "[" + meta_str
+
+                base_data: list[str] = base_str.split()
+
+                if (prefix == "start_hub" or prefix == "end_hub"
+                        or prefix == "hub"):
+                    hub_dict: dict[str, Any] = {
+                        "name": base_data[0],
+                        "x": int(base_data[1]),
+                        "y": int(base_data[2])
+                    }
+                    if meta_str:
+                        hub_dict.update(parse_metadata(meta_str))
+
+                    validated_hub = HubData(**hub_dict)
+
+                    if prefix == "hub":
+                        config["hubs"].append(validated_hub)
+                    else:
+                        config[prefix] = validated_hub
+
+                if prefix == "connection":
+                    base_data = [name.strip() for name in base_str.split("-")]
+                    link_dict: dict[str, Any] = {
+                        "hub_1": base_data[0],
+                        "hub_2": base_data[1]
+                    }
+                    if meta_str:
+                        link_dict.update(parse_metadata(meta_str))
+
+                    validated_link = LinkData(**link_dict)
+
+                    config["connections"].append(validated_link)
+
+                if prefix == "nb_drones":
+                    config["nb_drones"] = int(content)
+    except (ValidationError, ValueError) as e:
+        print(f"Error: {e}")
+        sys.exit(1)
+
+    return config
