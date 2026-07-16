@@ -14,11 +14,14 @@ class Hub(ABC):
     """
 
     def __init__(self, name: str, x: int, y: int,
+                 zone: str = "normal", color: str | None = None,
                  max_drones: int | float = 1) -> None:
         """Initializes a Hub with coordinates and capacity."""
         self.name: str = name
         self.x: int = x
         self.y: int = y
+        self.zone: str = zone
+        self.color: str | None = color
         self.max_drones: int | float = max_drones
 
 
@@ -40,23 +43,28 @@ class RestrictedHub(Hub):
 class BlockedHub(Hub):
     """An inaccessible zone. Drones cannot enter."""
 
-    def __init__(self, name: str, x: int, y: int) -> None:
+    def __init__(self, name: str, x: int, y: int, zone: str,
+                 color: str | None) -> None:
         """Initializes a BlockedHub with a capacity of 0."""
-        super().__init__(name, x, y, max_drones=0)
+        super().__init__(name, x, y, zone, color, max_drones=0)
 
 
 class StartHub(Hub):
     """A start zone with no max_drone limit"""
 
-    def __init__(self, name: str, x: int, y: int) -> None:
-        super().__init__(name, x, y, max_drones=float('inf'))
+    def __init__(self, name: str, x: int, y: int, zone: str,
+                 color: str | None) -> None:
+        """Initializes a StartHub with an unlimited capacity."""
+        super().__init__(name, x, y, zone, color, max_drones=float('inf'))
 
 
 class EndHub(Hub):
     """A end zone with no max_drone limit"""
 
-    def __init__(self, name: str, x: int, y: int) -> None:
-        super().__init__(name, x, y, max_drones=float('inf'))
+    def __init__(self, name: str, x: int, y: int, zone: str,
+                 color: str | None) -> None:
+        """Initializes a EndHub with an unlimited capacity."""
+        super().__init__(name, x, y, zone, color, max_drones=float('inf'))
 
 
 class Link:
@@ -68,8 +76,9 @@ class Link:
         capacity (int): Max drones that can traverse simultaneously.
     """
 
-    def __init__(self, hub_a: Hub, hub_b: Hub, capacity: int = 1) -> None:
+    def __init__(self, hub_1: Hub, hub_2: Hub, max_link_capacity: int = 1
+                 ) -> None:
         """Initializes a Link with its connected hubs and capacity."""
-        self.hub_a: Hub = hub_a
-        self.hub_b: Hub = hub_b
-        self.capacity: int = capacity
+        self.hub_1: Hub = hub_1
+        self.hub_2: Hub = hub_2
+        self.max_link_capacity: int = max_link_capacity

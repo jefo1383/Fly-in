@@ -11,12 +11,13 @@ class HubData(BaseModel):
         name (str): The unique identifier of the hub.
         x (int): The X coordinate.
         y (int): The Y coordinate.
+        color (str): The optional hub color
     """
     name: str
     x: int = Field(ge=0)
     y: int = Field(ge=0)
-    color: Optional[str] = None
     zone: str = Field(default="normal")
+    color: Optional[str] = Field(default=None)
     max_drones: int = Field(ge=1, default=1)
 
 
@@ -24,8 +25,8 @@ class LinkData(BaseModel):
     """Validates raw connection data extracted from the map file.
 
     Attributes:
-        hub_a (str): The name of the first connected hub.
-        hub_b (str): The name of the second connected hub.
+        hub_1 (str): The name of the first connected hub.
+        hub_2 (str): The name of the second connected hub.
         max_link_capacity (int): Maximum drones allowed
         on the link simultaneously.
     """
@@ -34,7 +35,7 @@ class LinkData(BaseModel):
     max_link_capacity: int = Field(ge=1, default=1)
 
 
-def valid_txt_file(filepath: str) -> str:
+def _valid_txt_file(filepath: str) -> str:
     """Validates that the provided filepath has a .txt extension.
 
     Args:
@@ -62,7 +63,7 @@ def parse_arguments() -> str:
     parser = argparse.ArgumentParser(description="Fly-in drone routing.")
     parser.add_argument(
         "map_file",
-        type=valid_txt_file,
+        type=_valid_txt_file,
         help="Path to the .txt map file to parse."
     )
     args: argparse.Namespace = parser.parse_args()
