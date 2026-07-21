@@ -12,7 +12,8 @@ class Drone:
 
     Attributes:
         current_pos (Hub | Link): The current node or edge.
-        # TODO: Define additional attributes.
+        is_arrived (bool): Flag when the drone reached the end_hub.
+        turns_remaining (int): numbers of turns to wait on a link.
     """
 
     def __init__(self, drone_id: str, start_hub: StartHub,
@@ -28,7 +29,7 @@ class Drone:
         self.start_hub = start_hub
         self.end_hub = end_hub
         self.current_pos: Hub | Link = start_hub
-        self.is_arrived: bool = self.current_pos == self.end_hub
+        self.is_arrived: bool = False
         self.turns_remaining: int = 0
 
     def move(self, target: Hub | Link, wait_time: int = 0) -> None:
@@ -78,16 +79,18 @@ class Map:
         """
         if config.get("start_hub"):
             start_data: HubData = config["start_hub"]
-            start_hub = StartHub(start_data.name, start_data.x, start_data.y,
-                                 start_data.zone, start_data.color)
-            self.hubs[start_hub.name] = start_hub
-            self.adjacency[start_hub.name] = []
+            start = StartHub(start_data.name, start_data.x, start_data.y,
+                             start_data.zone, start_data.color)
+            self.hubs[start.name] = start
+            self.start_hub: StartHub = start
+            self.adjacency[start.name] = []
         if config.get("end_hub"):
             end_data: HubData = config["end_hub"]
-            end_hub = EndHub(end_data.name, end_data.x, end_data.y,
-                             end_data.zone, end_data.color)
-            self.hubs[end_hub.name] = end_hub
-            self.adjacency[end_hub.name] = []
+            end = EndHub(end_data.name, end_data.x, end_data.y,
+                         end_data.zone, end_data.color)
+            self.hubs[end.name] = end
+            self.end_hub: EndHub = end
+            self.adjacency[end.name] = []
         for hub_data in config.get("hubs", []):
             new_hub: Hub
             match hub_data.zone:
