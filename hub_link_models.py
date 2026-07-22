@@ -71,8 +71,8 @@ class Link:
     """A bidirectional connection between two hubs.
 
     Attributes:
-        hub_a (Hub): The first connected zone.
-        hub_b (Hub): The second connected zone.
+        hub_1 (Hub): The first connected zone.
+        hub_2 (Hub): The second connected zone.
         capacity (int): Max drones that can traverse simultaneously.
     """
 
