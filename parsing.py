@@ -14,8 +14,8 @@ class HubData(BaseModel):
         color (str): The optional hub color
     """
     name: str
-    x: int = Field(ge=0)
-    y: int = Field(ge=0)
+    x: int
+    y: int
     zone: str = Field(default="normal")
     color: Optional[str] = Field(default=None)
     max_drones: int = Field(ge=1, default=1)

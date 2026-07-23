@@ -92,7 +92,7 @@ class Map:
                 case "normal":
                     new_hub = NormalHub(
                         hub_data.name, hub_data.x, hub_data.y,
-                        hub_data.color, hub_data.max_drones
+                        color=hub_data.color, max_drones=hub_data.max_drones
                     )
                 case "restricted":
                     new_hub = RestrictedHub(

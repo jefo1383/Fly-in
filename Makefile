@@ -4,7 +4,7 @@ install:
 	uv sync
 
 run:
-	uv run main.py
+	uv run main.py $(MAP)
 
 debug:
 	uv run python -m pdb main.py

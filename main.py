@@ -1,5 +1,6 @@
 from drone_map_models import Map, Drone
 from pathfinding import Pathfinder
+from parsing import parse_arguments, parse_map_file
 
 
 class Simulation:
@@ -18,7 +19,6 @@ class Simulation:
         """
         self.network_map: Map = network_map
         self.drones: list[Drone] = []
-        self.turn_count: int = 0
 
         for i in range(1, self.network_map.nb_drones + 1):
             self.drones.append(
@@ -32,10 +32,7 @@ class Simulation:
         finds the optimal path for each, and registers it in the
         shared calendar.
         """
-        # TODO: Instancier le Pathfinder avec la carte du réseau
         solver = Pathfinder(self.network_map)
-        # TODO: Parcourir chaque drone de la flotte
-        # TODO: Trouver le chemin, le réserver et l'assigner au drone
         for drone in self.drones:
             path = solver.find_path(drone.start_hub, drone.end_hub)
             if path:
@@ -53,23 +50,72 @@ class Simulation:
         for drone in self.drones:
             if not drone.is_arrived:
                 target = drone.path.pop(0)
+                if target != drone.current_pos:
+                    log = f"{drone.drone_id}-{target.name}"
+                    res.append(log)
                 drone.move(target)
-                log = f"{drone.drone_id}-{target.name}"
-                res.append(log)
         return res
 
     def run(self) -> None:
         """Executes the simulation loop until all drones reach the end."""
+        self.route_fleet()
+        metrics = Metrics(self.drones)
         while not all(drone.is_arrived for drone in self.drones):
-
-            self.turn_count += 1
+            metrics.turn_count += 1
             movements = self._play_turn()
             if movements:
                 print(" ".join(movements))
+        metrics.print_metrics()
+
+
+class Metrics:
+    """Calculates and stores simulation performance metrics.
+
+    Attributes:
+        drones (list[Drone]): The fleet of drones to analyze.
+        nb_drones (int): The total number of drones in the fleet.
+        total_path_cost (int): The sum of all turns spent by all drones.
+    """
+    def __init__(self, drones: list[Drone]) -> None:
+        """Initializes the metrics based on the initial drone paths.
+
+        Args:
+            drones (list[Drone]): The fleet of drones with their
+                calculated paths before the simulation starts.
+        """
+        self.drones = drones
+        self.nb_drones: int = len(drones)
+        self.turn_count: int = 0
+        self.total_path_cost: int = sum(len(drone.path) for drone in drones)
+        self.turns_per_drone: float = self.total_path_cost / self.nb_drones
+
+    def print_metrics(self) -> None:
+        """Displays the calculated metrics to the console
+        and visual representation.
+        """
+        print(f"Score: {self.turn_count} turns")
+        print(f"Total path cost: {self.total_path_cost} movements")
+        print(f"Average drones moves per turn: {(self.total_path_cost /
+                                                self.turn_count):.1f}")
+        print(f"Average moves per drone: {self.turns_per_drone:.1f}")
 
 
 def main():
-    print("Hello from fly-in!")
+    """Entry point of the Fly-in simulation.
+
+    Parses command-line arguments to get the map file,
+    generates the configuration dictionary, builds the network map,
+    and executes the simulation.
+    """
+    try:
+        print("Hello from fly-in!")
+        file_path = parse_arguments()
+        config = parse_map_file(file_path)
+        network_map = Map(config)
+        simulation = Simulation(network_map)
+        simulation.run()
+    except Exception as e:
+        print(e)
 
 
 if __name__ == "__main__":
