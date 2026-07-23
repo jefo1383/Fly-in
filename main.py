@@ -1,4 +1,5 @@
 from drone_map_models import Map, Drone
+from pathfinding import Pathfinder
 
 
 class Simulation:
@@ -24,6 +25,23 @@ class Simulation:
                 Drone(f"D{i}", network_map.start_hub, network_map.end_hub)
             )
 
+    def route_fleet(self) -> None:
+        """Calculates and books paths for the entire fleet of drones.
+
+        Instantiates the Pathfinder, iterates through all drones,
+        finds the optimal path for each, and registers it in the
+        shared calendar.
+        """
+        # TODO: Instancier le Pathfinder avec la carte du réseau
+        solver = Pathfinder(self.network_map)
+        # TODO: Parcourir chaque drone de la flotte
+        # TODO: Trouver le chemin, le réserver et l'assigner au drone
+        for drone in self.drones:
+            path = solver.find_path(drone.start_hub, drone.end_hub)
+            if path:
+                solver.book_path(path)
+                drone.path = path
+
     def _play_turn(self) -> list[str]:
         """Executes a single simulation turn for all drones.
 
@@ -32,6 +50,12 @@ class Simulation:
                 'D<ID>-<destination>' for drones that moved this turn.
         """
         res: list[str] = []
+        for drone in self.drones:
+            if not drone.is_arrived:
+                target = drone.path.pop(0)
+                drone.move(target)
+                log = f"{drone.drone_id}-{target.name}"
+                res.append(log)
         return res
 
     def run(self) -> None:

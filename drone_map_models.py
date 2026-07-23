@@ -30,27 +30,22 @@ class Drone:
         self.end_hub = end_hub
         self.current_pos: Hub | Link = start_hub
         self.is_arrived: bool = False
-        self.turns_remaining: int = 0
+        self.path: list[Hub | Link] = []
 
-    def move(self, target: Hub | Link, wait_time: int = 0) -> None:
+    def move(self, target: Hub | Link) -> None:
         """Moves the drone to the specified target.
 
         Handles the logic for updating the drone's current position,
-        decreasing wait times if currently on a link, and updating
-        the arrival status.
+        and updating the arrival status.
 
         Args:
             target (Hub | Link): The destination hub or the link to
                 transit on.
-            wait_time (int): the number of turns to wait.
         """
         if self.is_arrived:
             return
-        if self.turns_remaining > 0 and isinstance(self.current_pos, Link):
-            self.turns_remaining -= 1
         else:
             self.current_pos = target
-            self.turns_remaining = wait_time
             if self.current_pos == self.end_hub:
                 self.is_arrived = True
 

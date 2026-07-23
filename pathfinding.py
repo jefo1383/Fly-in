@@ -141,4 +141,5 @@ class Pathfinder:
         """
         for time, node in enumerate(path, start_time + 1):
             self.calendar.setdefault(time, {})
-            
+            nb_drones = self.calendar[time].get(node, 0)
+            self.calendar[time][node] = nb_drones + 1

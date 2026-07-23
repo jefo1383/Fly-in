@@ -79,6 +79,7 @@ class Link:
     def __init__(self, hub_1: Hub, hub_2: Hub, max_link_capacity: int = 1
                  ) -> None:
         """Initializes a Link with its connected hubs and capacity."""
+        self.name: str = f"link({hub_1.name}-{hub_2.name})"
         self.hub_1: Hub = hub_1
         self.hub_2: Hub = hub_2
         self.max_link_capacity: int = max_link_capacity
