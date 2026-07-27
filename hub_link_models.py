@@ -14,14 +14,14 @@ class Hub(ABC):
     """
 
     def __init__(self, name: str, x: int, y: int,
-                 zone: str = "normal", color: str | None = None,
+                 zone: str = "normal", color: str = "white",
                  max_drones: int | float = 1) -> None:
         """Initializes a Hub with coordinates and capacity."""
         self.name: str = name
         self.x: int = x
         self.y: int = y
         self.zone: str = zone
-        self.color: str | None = color
+        self.color: str = color
         self.max_drones: int | float = max_drones
 
 
@@ -44,7 +44,7 @@ class BlockedHub(Hub):
     """An inaccessible zone. Drones cannot enter."""
 
     def __init__(self, name: str, x: int, y: int, zone: str,
-                 color: str | None) -> None:
+                 color: str) -> None:
         """Initializes a BlockedHub with a capacity of 0."""
         super().__init__(name, x, y, zone, color, max_drones=0)
 
@@ -53,7 +53,7 @@ class StartHub(Hub):
     """A start zone with no max_drone limit"""
 
     def __init__(self, name: str, x: int, y: int, zone: str,
-                 color: str | None) -> None:
+                 color: str) -> None:
         """Initializes a StartHub with an unlimited capacity."""
         super().__init__(name, x, y, zone, color, max_drones=float('inf'))
 
@@ -62,7 +62,7 @@ class EndHub(Hub):
     """A end zone with no max_drone limit"""
 
     def __init__(self, name: str, x: int, y: int, zone: str,
-                 color: str | None) -> None:
+                 color: str) -> None:
         """Initializes a EndHub with an unlimited capacity."""
         super().__init__(name, x, y, zone, color, max_drones=float('inf'))
 

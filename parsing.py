@@ -1,6 +1,6 @@
 import argparse
 from pydantic import BaseModel, Field, ValidationError
-from typing import Optional, Any
+from typing import Any
 import sys
 
 
@@ -17,7 +17,7 @@ class HubData(BaseModel):
     x: int
     y: int
     zone: str = Field(default="normal")
-    color: Optional[str] = Field(default=None)
+    color: str = Field(default="white")
     max_drones: int = Field(ge=1, default=1)
 
 
