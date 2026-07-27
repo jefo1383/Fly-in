@@ -28,7 +28,7 @@ class SimulationGUI:
         """
         self.network_map = network_map
         self.scale = scale
-        self.drone_items: dict[str, int] = {}
+        self.drone_items: dict[str, dict[str, int]] = {}
 
         self.offset_x: int = 100
         self.offset_y: int = 600
@@ -41,9 +41,7 @@ class SimulationGUI:
         self.hub_sprite = tk.PhotoImage(file="Assets/hub.png")
         self.h_link_sprite = tk.PhotoImage(file="Assets/h_link.png")
         self.v_link_sprite = tk.PhotoImage(file="Assets/v_link.png")
-        self.drone_right = tk.PhotoImage(file="Assets/drone_r.png")
-        self.drone_down = tk.PhotoImage(file="Assets/drone_d.png")
-        self.drone_up = tk.PhotoImage(file="Assets/drone_u.png")
+        self.drone_sprite = tk.PhotoImage(file="Assets/drone_r.png")
 
     def _draw_hubs(self) -> None:
         """Draws all hubs from the network map onto the canvas.
@@ -117,18 +115,25 @@ class SimulationGUI:
                                                  image=self.h_link_sprite)
 
     def _init_drones(self, drones: list[Drone]) -> None:
-        """Draws drones at the starting hub and save
-        their Tkinter ID with their drone_id in self.drone_items.
+        """Draws drones and their text IDs at the starting hub.
+
+        Saves their Tkinter IDs in self.drone_items using a nested
+        dictionary structure.
 
         Args:
-            drones (list[Drones]): the list of drones on the map.
+            drones (list[Drone]): The list of drones on the map.
         """
 
         x_px = (self.network_map.start_hub.x * self.scale) + self.offset_x
         y_px = (self.network_map.start_hub.y * self.scale) + self.offset_y
         for drone in drones:
-            self.drone_items[drone.drone_id] = self.canvas.create_image(
-                                            x_px, y_px, image=self.drone_right)
+            self.drone_items[drone.drone_id] = {
+                "img": self.canvas.create_image(x_px, y_px,
+                                                image=self.drone_sprite),
+                "text": self.canvas.create_text(x_px, y_px,
+                                                text=drone.drone_id,
+                                                fill="black")
+            }
 
     def update_drone(self, drone_id: str, new_x: int, new_y: int) -> None:
         """Updates the position of a specific drone on the canvas.
@@ -147,7 +152,8 @@ class SimulationGUI:
         x_px = (new_x * self.scale) + self.offset_x
         y_px = (new_y * self.scale) + self.offset_y
         # Mettre a jour la position avec self.canvas.coords()
-        self.canvas.coords(t_id, x_px, y_px)
+        self.canvas.coords(t_id["img"], x_px, y_px)
+        self.canvas.coords(t_id["text"], x_px, y_px)
 
     def setup(self, drones: list[Drone]) -> None:
         """Initializes the visual elements on the canvas in the correct order.
