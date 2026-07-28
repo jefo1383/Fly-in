@@ -1,14 +1,18 @@
 from drone_map_models import Map, Drone
+from hub_link_models import Hub, Link
 from pathfinding import Pathfinder
 from parsing import parse_arguments, parse_map_file
+from graph import SimulationGUI
+import time
 
 
 class Simulation:
     """Manages the step-by-step execution of the drone routing.
 
     Attributes:
-        drones (list[Drones]): The list of drones on the map.
-        turn_count (int): The number of turns executed.
+        network_map (Map): The map of the simulation.
+        drones (list[Drone]): The list of active drones.
+        gui (SimulationGUI): The graphical interface manager.
     """
 
     def __init__(self, network_map: Map) -> None:
@@ -24,6 +28,9 @@ class Simulation:
             self.drones.append(
                 Drone(f"D{i}", network_map.start_hub, network_map.end_hub)
             )
+
+        self.gui = SimulationGUI(self.network_map)
+        self.gui.setup(self.drones)
 
     def route_fleet(self) -> None:
         """Calculates and books paths for the entire fleet of drones.
@@ -47,6 +54,7 @@ class Simulation:
                 'D<ID>-<destination>' for drones that moved this turn.
         """
         res: list[str] = []
+        drones_count: dict[Hub | Link, int] = {}
         for drone in self.drones:
             if not drone.is_arrived:
                 target = drone.path.pop(0)
@@ -54,6 +62,9 @@ class Simulation:
                     log = f"{drone.drone_id}-{target.name}"
                     res.append(log)
                 drone.move(target)
+                overlap_index = drones_count.get(target, 0)
+                drones_count[target] = overlap_index + 1
+                self.gui.update_drone(drone.drone_id, target, overlap_index)
         return res
 
     def run(self) -> None:
@@ -65,7 +76,10 @@ class Simulation:
             movements = self._play_turn()
             if movements:
                 print(" ".join(movements))
+            self.gui.root.update()
+            time.sleep(0.7)
         metrics.print_metrics()
+        self.gui.root.mainloop()
 
 
 class Metrics:

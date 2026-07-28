@@ -1,6 +1,6 @@
 import tkinter as tk
 from drone_map_models import Map, Drone
-from hub_link_models import StartHub, EndHub
+from hub_link_models import StartHub, EndHub, Hub, Link
 
 
 class SimulationGUI:
@@ -34,13 +34,16 @@ class SimulationGUI:
         self.offset_y: int = 600
         self.root = tk.Tk()
         self.root.title("Fly-in 42")
-        self.canvas = tk.Canvas(self.root, height=1200, width=1800)
+        self.canvas = tk.Canvas(self.root, height=1200, width=1800, bg="white")
         self.canvas.pack()
-        self.start_hub_sprite = tk.PhotoImage(file="Assets/start_hub.png")
-        self.end_hub_sprite = tk.PhotoImage(file="Assets/end_hub.png")
-        self.hub_sprite = tk.PhotoImage(file="Assets/hub.png")
-        self.h_link_sprite = tk.PhotoImage(file="Assets/h_link.png")
-        self.v_link_sprite = tk.PhotoImage(file="Assets/v_link.png")
+        hub_sprite = tk.PhotoImage(file="Assets/start_hub.png")
+        self.start_hub_sprite = hub_sprite.subsample(13, 13)
+        self.end_hub_sprite = hub_sprite.subsample(13, 13)
+        self.hub_sprite = hub_sprite.subsample(26, 26)
+        h_link_sprite = tk.PhotoImage(file="Assets/h_link.png")
+        self.h_link_sprite = h_link_sprite.subsample(22, 22)
+        v_link_sprite = tk.PhotoImage(file="Assets/v_link.png")
+        self.v_link_sprite = v_link_sprite.subsample(22, 22)
         self.drone_sprite = tk.PhotoImage(file="Assets/drone_r.png")
 
     def _draw_hubs(self) -> None:
@@ -135,21 +138,40 @@ class SimulationGUI:
                                                 fill="black")
             }
 
-    def update_drone(self, drone_id: str, new_x: int, new_y: int) -> None:
+    def update_drone(self, drone_id: str, target: Hub | Link,
+                     overlap_index: int = 0) -> None:
         """Updates the position of a specific drone on the canvas.
 
         Retrieves the drone's Tkinter ID, calculates its new pixel
-        coordinates, and updates its position on the canvas.
+        coordinates based on whether the target is a Hub or a Link,
+        applies a visual offset for overlapping drones, and updates
+        its position on the canvas.
 
         Args:
             drone_id (str): The identifier of the drone to move.
-            new_x (int): The new X grid coordinate.
-            new_y (int): The new Y grid coordinate.
+            target (Hub | Link): The destination hub or link.
+            overlap_index (int): The index of the drone on the target
+                to calculate the visual offset (default is 0).
         """
         # Recuperer l'ID Tkinter du drone via self.drone_items
         t_id = self.drone_items[drone_id]
         # Calculer les nouvelles coordonnees en pixels (x_px, y_px)
+        if isinstance(target, Hub):
+            new_x = target.x
+            new_y = target.y
+        elif isinstance(target, Link):
+            if (target.hub_1.y != target.hub_2.y and
+                    target.hub_1.x != target.hub_2.x):
+                new_x = target.hub_1.x
+                new_y = target.hub_2.y
+            elif target.hub_1.x == target.hub_2.x:
+                new_x = target.hub_1.x
+                new_y = (target.hub_1.y + target.hub_2.y) // 2
+            elif target.hub_1.y == target.hub_2.y:
+                new_y = target.hub_1.y
+                new_x = (target.hub_1.x + target.hub_2.x) // 2
         x_px = (new_x * self.scale) + self.offset_x
+        x_px -= (overlap_index * 10)
         y_px = (new_y * self.scale) + self.offset_y
         # Mettre a jour la position avec self.canvas.coords()
         self.canvas.coords(t_id["img"], x_px, y_px)
