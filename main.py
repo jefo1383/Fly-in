@@ -77,7 +77,7 @@ class Simulation:
             if movements:
                 print(" ".join(movements))
             self.gui.root.update()
-            time.sleep(0.7)
+            time.sleep(1)
         metrics.print_metrics()
         self.gui.root.mainloop()
 

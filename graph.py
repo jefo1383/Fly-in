@@ -19,7 +19,7 @@ class SimulationGUI:
         drone_sprite (tk.PhotoImage): The sprite image for drone.
     """
 
-    def __init__(self, network_map: Map, scale: int = 100) -> None:
+    def __init__(self, network_map: Map, scale: int = 120) -> None:
         """Initializes the GUI, canvas, and loads sprites.
 
         Args:
@@ -34,17 +34,18 @@ class SimulationGUI:
         self.offset_y: int = 600
         self.root = tk.Tk()
         self.root.title("Fly-in 42")
-        self.canvas = tk.Canvas(self.root, height=1200, width=1800, bg="white")
+        self.canvas = tk.Canvas(self.root, height=1000, width=2700, bg="white")
         self.canvas.pack()
-        hub_sprite = tk.PhotoImage(file="Assets/start_hub.png")
-        self.start_hub_sprite = hub_sprite.subsample(13, 13)
-        self.end_hub_sprite = hub_sprite.subsample(13, 13)
-        self.hub_sprite = hub_sprite.subsample(26, 26)
+        hub_sprite = tk.PhotoImage(file="Assets/hub.png")
+        self.start_hub_sprite = hub_sprite.subsample(4, 4)
+        self.end_hub_sprite = hub_sprite.subsample(4, 4)
+        self.hub_sprite = hub_sprite.subsample(9, 9)
         h_link_sprite = tk.PhotoImage(file="Assets/h_link.png")
-        self.h_link_sprite = h_link_sprite.subsample(22, 22)
+        self.h_link_sprite = h_link_sprite.subsample(30, 30)
         v_link_sprite = tk.PhotoImage(file="Assets/v_link.png")
-        self.v_link_sprite = v_link_sprite.subsample(22, 22)
-        self.drone_sprite = tk.PhotoImage(file="Assets/drone_r.png")
+        self.v_link_sprite = v_link_sprite.subsample(30, 30)
+        drone_sprite = tk.PhotoImage(file="Assets/drone.png")
+        self.drone_sprite = drone_sprite.subsample(8, 8)
 
     def _draw_hubs(self) -> None:
         """Draws all hubs from the network map onto the canvas.
@@ -60,27 +61,27 @@ class SimulationGUI:
             y_px = (hub.y * self.scale) + self.offset_y
 
             if isinstance(hub, StartHub):
-                x1 = x_px - (self.start_hub_sprite.width() // 2)
-                y1 = y_px - (self.start_hub_sprite.height() // 2)
-                x2 = x_px + (self.start_hub_sprite.width() // 2)
-                y2 = y_px + (self.start_hub_sprite.height() // 2)
+                x1 = x_px - (self.start_hub_sprite.width() // 3)
+                y1 = y_px - (self.start_hub_sprite.height() // 3)
+                x2 = x_px + (self.start_hub_sprite.width() // 3)
+                y2 = y_px + (self.start_hub_sprite.height() // 3)
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=hub.color,
                                              outline="")
                 self.canvas.create_image(x_px, y_px,
                                          image=self.start_hub_sprite)
             elif isinstance(hub, EndHub):
-                x1 = x_px - (self.end_hub_sprite.width() // 2)
-                y1 = y_px - (self.end_hub_sprite.height() // 2)
-                x2 = x_px + (self.end_hub_sprite.width() // 2)
-                y2 = y_px + (self.end_hub_sprite.height() // 2)
+                x1 = x_px - (self.end_hub_sprite.width() // 3)
+                y1 = y_px - (self.end_hub_sprite.height() // 3)
+                x2 = x_px + (self.end_hub_sprite.width() // 3)
+                y2 = y_px + (self.end_hub_sprite.height() // 3)
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=hub.color,
                                              outline="")
                 self.canvas.create_image(x_px, y_px, image=self.end_hub_sprite)
             else:
-                x1 = x_px - (self.hub_sprite.width() // 2)
-                y1 = y_px - (self.hub_sprite.height() // 2)
-                x2 = x_px + (self.hub_sprite.width() // 2)
-                y2 = y_px + (self.hub_sprite.height() // 2)
+                x1 = x_px - (self.hub_sprite.width() // 3)
+                y1 = y_px - (self.hub_sprite.height() // 3)
+                x2 = x_px + (self.hub_sprite.width() // 3)
+                y2 = y_px + (self.hub_sprite.height() // 3)
                 self.canvas.create_rectangle(x1, y1, x2, y2, fill=hub.color,
                                              outline="")
                 self.canvas.create_image(x_px, y_px, image=self.hub_sprite)
@@ -105,16 +106,22 @@ class SimulationGUI:
                     x2_px = (link.hub_2.x * self.scale) + self.offset_x
                     y2_px = (link.hub_2.y * self.scale) + self.offset_y
 
-                    for step_y in range(min(y1_px, y2_px) + self.scale,
-                                        max(y1_px, y2_px), self.scale):
-                        self.canvas.create_image(x1_px, step_y,
+                    for step_y in range(min(y1_px, y2_px),
+                                        (max(y1_px, y2_px) -
+                                         (self.v_link_sprite.height() // 2)),
+                                        self.v_link_sprite.height()):
+                        self.canvas.create_image(x1_px,
+                                                 step_y + (self.v_link_sprite.height() // 2) - (self.v_link_sprite.width() // 2),
                                                  image=self.v_link_sprite)
-                    if y1_px != y2_px and x1_px != x2_px:
-                        self.canvas.create_image(x1_px, y2_px,
-                                                 image=self.v_link_sprite)
-                    for step_x in range(min(x1_px, x2_px) + self.scale,
-                                        max(x1_px, x2_px), self.scale):
-                        self.canvas.create_image(step_x, y2_px,
+                    # if y1_px != y2_px and x1_px != x2_px:
+                        # self.canvas.create_image(x1_px, y2_px,
+                        #                         image=self.v_link_sprite)
+                    for step_x in range(min(x1_px, x2_px),
+                                        (max(x1_px, x2_px) -
+                                         (self.h_link_sprite.width() // 2)),
+                                        self.h_link_sprite.width()):
+                        self.canvas.create_image(step_x + (self.h_link_sprite.width() // 2) + (self.h_link_sprite.height() // 2),
+                                                 y2_px,
                                                  image=self.h_link_sprite)
 
     def _init_drones(self, drones: list[Drone]) -> None:
