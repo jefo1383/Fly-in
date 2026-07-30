@@ -37,11 +37,15 @@ class SimulationGUI:
         self.offset_x: int = 100
         self.offset_y: int = 400
         self.root = tk.Tk()
+        import tkinter.font as tkfont
+        print(tkfont.families())
         self.root.title("Fly-in 42")
         if len(self.network_map.hubs) > 8:
-            self.canvas = tk.Canvas(self.root, height=800, width=2700, bg="white")
+            self.canvas = tk.Canvas(self.root, height=1000, width=2700,
+                                    bg="white")
         else:
-            self.canvas = tk.Canvas(self.root, height=800, width=1350, bg="white")
+            self.canvas = tk.Canvas(self.root, height=1000, width=1350,
+                                    bg="white")
         self.canvas.pack()
         hub_sprite = tk.PhotoImage(file="Assets/hub.png")
         self.start_hub_sprite = hub_sprite.subsample(5, 5)
@@ -180,7 +184,8 @@ class SimulationGUI:
         """
         positions: dict[Drone, tuple[float, float]] = {}
         for m in moves:
-            curr_x, curr_y = self.canvas.coords(self.drone_items[m[0].drone_id]["img"])
+            curr_x, curr_y = self.canvas.coords(
+                self.drone_items[m[0].drone_id]["img"])
             tar_coords = self._get_target_coords(m[1], m[2])
             dx = (tar_coords[0] - curr_x) / frames
             dy = (tar_coords[1] - curr_y) / frames
@@ -208,3 +213,55 @@ class SimulationGUI:
         self._draw_links()
         self._draw_hubs()
         self._init_drones(drones)
+        self._init_ui_elements()
+
+    def _init_ui_elements(self) -> None:
+        """Initializes the UI elements for metrics and logs.
+
+        Creates a Text widget for scrolling logs and embeds it in the canvas.
+        Prepares the dictionary for other UI items.
+        """
+        self.log_widget: tk.Text = tk.Text(self.root, bg="white", fg="black",
+                                           bd=5, relief="raised",
+                                           font=("liberation mono", 11,
+                                                 "bold"))
+        self.canvas.create_window(
+            int(self.canvas.cget("width")) // 2,
+            850, window=self.log_widget, width=int(self.canvas.cget("width")),
+            height=300)
+
+    def update_logs(self, turn: int, logs: list[str]) -> None:
+        """Appends the current turn's movements to the log widget.
+
+        Args:
+            turn (int): The current turn number.
+            logs (list[str]): Movements of the current turn.
+        """
+        log_text: str = f"Turn {turn}: " + " ".join(logs) + "\n"
+        self.log_widget.insert(tk.END, log_text)
+        self.log_widget.see(tk.END)
+
+    def show_final_metrics(
+        self,
+        score: int,
+        path_cost: int,
+        avg_moves: float,
+        avg_drone: float
+    ) -> None:
+        """Appends the final simulation metrics to the log widget.
+
+        Args:
+            score (int): Total number of turns.
+            path_cost (int): Total movements made.
+            avg_moves (float): Average moves per turn.
+            avg_drone (float): Average moves per drone.
+        """
+        final_text: str = (
+            "\n=== SIMULATION COMPLETE ===\n"
+            f"Score: {score} turns\n"
+            f"Total path cost: {path_cost} movements\n"
+            f"Average drones moves per turn: {avg_moves:.1f}\n"
+            f"Average moves per drone: {avg_drone:.1f}\n"
+        )
+        self.log_widget.insert(tk.END, final_text)
+        self.log_widget.see(tk.END)

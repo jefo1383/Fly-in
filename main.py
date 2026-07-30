@@ -80,9 +80,15 @@ class Simulation:
             movements = self._play_turn()
             if movements:
                 print(" ".join(movements))
+                self.gui.update_logs(metrics.turn_count, movements)
             self.gui.root.update()
             time.sleep(0.2)
         metrics.print_metrics()
+        self.gui.show_final_metrics(metrics.turn_count,
+                                    metrics.total_path_cost,
+                                    (metrics.total_path_cost /
+                                     metrics.turn_count),
+                                    metrics.turns_per_drone)
         self.gui.root.mainloop()
 
 
