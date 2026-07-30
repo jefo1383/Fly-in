@@ -55,16 +55,20 @@ class Simulation:
         """
         res: list[str] = []
         drones_count: dict[Hub | Link, int] = {}
+        moves: list[tuple[Drone, Hub | Link, int]] = []
         for drone in self.drones:
             if not drone.is_arrived:
                 target = drone.path.pop(0)
                 if target != drone.current_pos:
                     log = f"{drone.drone_id}-{target.name}"
                     res.append(log)
-                drone.move(target)
                 overlap_index = drones_count.get(target, 0)
                 drones_count[target] = overlap_index + 1
-                self.gui.update_drone(drone.drone_id, target, overlap_index)
+                moves.append((drone, target, overlap_index))
+                drone.move(target)
+        self.gui.animate_drones(moves)
+        for m in moves:
+            self.gui.update_drone(m[0].drone_id, m[1], m[2])
         return res
 
     def run(self) -> None:
@@ -77,7 +81,7 @@ class Simulation:
             if movements:
                 print(" ".join(movements))
             self.gui.root.update()
-            time.sleep(1)
+            time.sleep(0.2)
         metrics.print_metrics()
         self.gui.root.mainloop()
 
@@ -100,7 +104,9 @@ class Metrics:
         self.drones = drones
         self.nb_drones: int = len(drones)
         self.turn_count: int = 0
-        self.total_path_cost: int = sum(len(drone.path) for drone in drones)
+        self.total_path_cost: int = sum(
+            sum(1 for i, step in enumerate(drone.path)
+                if i == 0 or step != drone.path[i-1]) for drone in drones)
         self.turns_per_drone: float = self.total_path_cost / self.nb_drones
 
     def print_metrics(self) -> None:

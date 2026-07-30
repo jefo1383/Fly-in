@@ -44,6 +44,9 @@ class Pathfinder:
         valid_moves: list[Hub | Link] = []
 
         if isinstance(current_pos, Hub):
+            if (self.calendar.get(current_time + 1, {}).get(current_pos, 0)
+                    < current_pos.max_drones):
+                valid_moves.append(current_pos)
             for link in self.network_map.adjacency[current_pos.name]:
                 if link.hub_1 != current_pos:
                     target = link.hub_1
@@ -62,9 +65,6 @@ class Pathfinder:
                          < target.max_drones)
                     ):
                         valid_moves.append(link)
-            if (self.calendar.get(current_time + 1, {}).get(current_pos, 0)
-                    < current_pos.max_drones):
-                valid_moves.append(current_pos)
 
         elif isinstance(current_pos, Link):
             parent = came_from[(current_time, current_pos)]

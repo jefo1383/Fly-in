@@ -1,6 +1,7 @@
 import tkinter as tk
 from drone_map_models import Map, Drone
 from hub_link_models import StartHub, EndHub, Hub, Link
+import time
 
 
 class SimulationGUI:
@@ -19,7 +20,7 @@ class SimulationGUI:
         drone_sprite (tk.PhotoImage): The sprite image for drone.
     """
 
-    def __init__(self, network_map: Map, scale: int = 120) -> None:
+    def __init__(self, network_map: Map, scale: int = 150) -> None:
         """Initializes the GUI, canvas, and loads sprites.
 
         Args:
@@ -27,25 +28,27 @@ class SimulationGUI:
             scale (int): The multiplication factor for coordinates.
         """
         self.network_map = network_map
-        self.scale = scale
+        if len(self.network_map.hubs) > 35:
+            self.scale = 100
+        else:
+            self.scale = scale
         self.drone_items: dict[str, dict[str, int]] = {}
 
         self.offset_x: int = 100
-        self.offset_y: int = 600
+        self.offset_y: int = 400
         self.root = tk.Tk()
         self.root.title("Fly-in 42")
-        self.canvas = tk.Canvas(self.root, height=1000, width=2700, bg="white")
+        if len(self.network_map.hubs) > 8:
+            self.canvas = tk.Canvas(self.root, height=800, width=2700, bg="white")
+        else:
+            self.canvas = tk.Canvas(self.root, height=800, width=1350, bg="white")
         self.canvas.pack()
         hub_sprite = tk.PhotoImage(file="Assets/hub.png")
-        self.start_hub_sprite = hub_sprite.subsample(4, 4)
-        self.end_hub_sprite = hub_sprite.subsample(4, 4)
+        self.start_hub_sprite = hub_sprite.subsample(5, 5)
+        self.end_hub_sprite = hub_sprite.subsample(5, 5)
         self.hub_sprite = hub_sprite.subsample(9, 9)
-        h_link_sprite = tk.PhotoImage(file="Assets/h_link.png")
-        self.h_link_sprite = h_link_sprite.subsample(30, 30)
-        v_link_sprite = tk.PhotoImage(file="Assets/v_link.png")
-        self.v_link_sprite = v_link_sprite.subsample(30, 30)
         drone_sprite = tk.PhotoImage(file="Assets/drone.png")
-        self.drone_sprite = drone_sprite.subsample(8, 8)
+        self.drone_sprite = drone_sprite.subsample(6, 6)
 
     def _draw_hubs(self) -> None:
         """Draws all hubs from the network map onto the canvas.
@@ -87,10 +90,10 @@ class SimulationGUI:
                 self.canvas.create_image(x_px, y_px, image=self.hub_sprite)
 
     def _draw_links(self) -> None:
-        """Draws orthogonal links between hubs using sprites.
+        """Draws straight lines between connected hubs.
 
-        Iterates through the network adjacency list and places
-        horizontal and vertical link sprites to connect hubs.
+        Iterates through the network adjacency list and uses the canvas
+        to draw direct lines connecting hub_1 and hub_2 for each link
         """
 
         drawn_links: set[str] = set()
@@ -106,23 +109,8 @@ class SimulationGUI:
                     x2_px = (link.hub_2.x * self.scale) + self.offset_x
                     y2_px = (link.hub_2.y * self.scale) + self.offset_y
 
-                    for step_y in range(min(y1_px, y2_px),
-                                        (max(y1_px, y2_px) -
-                                         (self.v_link_sprite.height() // 2)),
-                                        self.v_link_sprite.height()):
-                        self.canvas.create_image(x1_px,
-                                                 step_y + (self.v_link_sprite.height() // 2) - (self.v_link_sprite.width() // 2),
-                                                 image=self.v_link_sprite)
-                    # if y1_px != y2_px and x1_px != x2_px:
-                        # self.canvas.create_image(x1_px, y2_px,
-                        #                         image=self.v_link_sprite)
-                    for step_x in range(min(x1_px, x2_px),
-                                        (max(x1_px, x2_px) -
-                                         (self.h_link_sprite.width() // 2)),
-                                        self.h_link_sprite.width()):
-                        self.canvas.create_image(step_x + (self.h_link_sprite.width() // 2) + (self.h_link_sprite.height() // 2),
-                                                 y2_px,
-                                                 image=self.h_link_sprite)
+                    self.canvas.create_line(x1_px, y1_px, x2_px, y2_px,
+                                            fill="lightgreen", width=7)
 
     def _init_drones(self, drones: list[Drone]) -> None:
         """Draws drones and their text IDs at the starting hub.
@@ -142,7 +130,7 @@ class SimulationGUI:
                                                 image=self.drone_sprite),
                 "text": self.canvas.create_text(x_px, y_px,
                                                 text=drone.drone_id,
-                                                fill="black")
+                                                fill="red")
             }
 
     def update_drone(self, drone_id: str, target: Hub | Link,
@@ -162,27 +150,51 @@ class SimulationGUI:
         """
         # Recuperer l'ID Tkinter du drone via self.drone_items
         t_id = self.drone_items[drone_id]
-        # Calculer les nouvelles coordonnees en pixels (x_px, y_px)
+        coords = self._get_target_coords(target, overlap_index)
+        # Mettre a jour la position avec self.canvas.coords()
+        self.canvas.coords(t_id["img"], coords[0], coords[1])
+        self.canvas.coords(t_id["text"], coords[0], coords[1])
+
+    def _get_target_coords(self, target: Hub | Link,
+                           overlap_index: int = 0) -> tuple[float, float]:
         if isinstance(target, Hub):
             new_x = target.x
             new_y = target.y
         elif isinstance(target, Link):
-            if (target.hub_1.y != target.hub_2.y and
-                    target.hub_1.x != target.hub_2.x):
-                new_x = target.hub_1.x
-                new_y = target.hub_2.y
-            elif target.hub_1.x == target.hub_2.x:
-                new_x = target.hub_1.x
-                new_y = (target.hub_1.y + target.hub_2.y) // 2
-            elif target.hub_1.y == target.hub_2.y:
-                new_y = target.hub_1.y
-                new_x = (target.hub_1.x + target.hub_2.x) // 2
+            new_x = (target.hub_1.x + target.hub_2.x) / 2
+            new_y = (target.hub_1.y + target.hub_2.y) / 2
         x_px = (new_x * self.scale) + self.offset_x
         x_px -= (overlap_index * 10)
         y_px = (new_y * self.scale) + self.offset_y
-        # Mettre a jour la position avec self.canvas.coords()
-        self.canvas.coords(t_id["img"], x_px, y_px)
-        self.canvas.coords(t_id["text"], x_px, y_px)
+        return (x_px, y_px)
+
+    def animate_drones(self, moves: list[tuple[Drone, Hub | Link, int]],
+                       frames: int = 25, duration: float = 0.4) -> None:
+        """Animates multiple drones moving to their targets simultaneously.
+
+        Args:
+            moves (list[tuple[Drone, Hub | Link, int]]): A list of tuples
+                containing (drone, target, overlap_index) for this turn.
+            frames (int): Total number of intermediate steps for animation.
+            duration (float): Total time of the animation in seconds.
+        """
+        positions: dict[Drone, tuple[float, float]] = {}
+        for m in moves:
+            curr_x, curr_y = self.canvas.coords(self.drone_items[m[0].drone_id]["img"])
+            tar_coords = self._get_target_coords(m[1], m[2])
+            dx = (tar_coords[0] - curr_x) / frames
+            dy = (tar_coords[1] - curr_y) / frames
+            positions[m[0]] = (dx, dy)
+        for i in range(frames):
+            for drone, dcoord in positions.items():
+                self.canvas.move(
+                    self.drone_items[drone.drone_id]["img"],
+                    dcoord[0], dcoord[1])
+                self.canvas.move(
+                    self.drone_items[drone.drone_id]["text"],
+                    dcoord[0], dcoord[1])
+            self.root.update()
+            time.sleep(duration / frames)
 
     def setup(self, drones: list[Drone]) -> None:
         """Initializes the visual elements on the canvas in the correct order.
