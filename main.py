@@ -130,7 +130,7 @@ class Metrics:
         print(f"Average moves per drone: {self.turns_per_drone:.1f}")
 
 
-def main():
+def main() -> None:
     """Entry point of the Fly-in simulation.
 
     Parses command-line arguments to get the map file,

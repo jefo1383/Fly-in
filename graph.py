@@ -160,8 +160,8 @@ class SimulationGUI:
     def _get_target_coords(self, target: Hub | Link,
                            overlap_index: int = 0) -> tuple[float, float]:
         if isinstance(target, Hub):
-            new_x = target.x
-            new_y = target.y
+            new_x: float = target.x
+            new_y: float = target.y
         elif isinstance(target, Link):
             new_x = (target.hub_1.x + target.hub_2.x) / 2
             new_y = (target.hub_1.y + target.hub_2.y) / 2

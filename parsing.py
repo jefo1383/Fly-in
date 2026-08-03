@@ -81,7 +81,7 @@ def parse_arguments() -> str:
         help="Path to the .txt map file to parse."
     )
     args: argparse.Namespace = parser.parse_args()
-    return args.map_file
+    return str(args.map_file)
 
 
 def parse_metadata(metadata_str: str) -> dict[str, str]:

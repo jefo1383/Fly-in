@@ -4,7 +4,7 @@
 from hub_link_models import NormalHub, PriorityHub, RestrictedHub, \
     BlockedHub, StartHub, EndHub, Link, Hub
 from typing import Any, cast
-from parsing import HubData, LinkData
+from parsing import HubData
 
 
 class Drone:
@@ -87,7 +87,6 @@ class Map:
             self.end_hub: EndHub = end
             self.adjacency[end.name] = []
         for hub_data in config.get("hubs", []):
-            hub_data: HubData
             new_hub: Hub
             match hub_data.zone:
                 case "normal":
@@ -123,7 +122,6 @@ class Map:
             config (dict[str, Any]): The parsed configuration.
         """
         for link_data in config.get("connections", []):
-            link_data: LinkData
             if (
                 link_data.hub_1 in self.hubs and
                 link_data.hub_2 in self.hubs

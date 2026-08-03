@@ -108,7 +108,8 @@ class Pathfinder:
         #        return None
             if current_pos == end_hub:
                 path: list[Hub | Link] = []
-                curr_state = (current_time, current_pos)
+                curr_state: tuple[int, Hub | Link] = (current_time,
+                                                      current_pos)
                 while True:
                     parent = came_from[curr_state]
                     if parent is None:
