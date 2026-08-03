@@ -123,7 +123,7 @@ class Metrics:
         """Displays the calculated metrics to the console
         and visual representation.
         """
-        print(f"Score: {self.turn_count} turns")
+        print(f"\nScore: {self.turn_count} turns")
         print(f"Total path cost: {self.total_path_cost} movements")
         print(f"Average drones moves per turn: {(self.total_path_cost /
                                                 self.turn_count):.1f}")
