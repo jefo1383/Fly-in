@@ -1,6 +1,6 @@
 import argparse
-from pydantic import BaseModel, Field, ValidationError
-from typing import Any
+from pydantic import BaseModel, Field, ValidationError, field_validator
+from typing import Any, Literal
 import sys
 
 
@@ -11,14 +11,28 @@ class HubData(BaseModel):
         name (str): The unique identifier of the hub.
         x (int): The X coordinate.
         y (int): The Y coordinate.
-        color (str): The optional hub color
+        zone (Literal["normal", "restricted", "priority", "blocked"]):
+            The type of zone.
+        color (str): The optional hub color.
+        max_drones (int): Maximum drones allowed.
     """
-    name: str
+    name: str = Field(pattern=r"^[^\-\s]+$")
     x: int
     y: int
-    zone: str = Field(default="normal")
+    zone: Literal["normal", "blocked", "restricted", "priority"] =\
+        Field(default="normal")
     color: str = Field(default="white")
     max_drones: int = Field(ge=1, default=1)
+
+    @field_validator('color')
+    @classmethod
+    def process_color(cls, v: str) -> str:
+        """Intercepte et gère les couleurs non supportées par Tkinter."""
+        val = v.lower()
+        if val == "rainbow":
+            print("Color 'rainbow' has been changed to: 'lightpink'")
+            return "lightpink"
+        return val
 
 
 class LinkData(BaseModel):
@@ -84,10 +98,12 @@ def parse_metadata(metadata_str: str) -> dict[str, str]:
     if not clean_meta:
         return {}
     meta_list: list[str] = clean_meta.split(" ")
-    meta_dict: dict[str, str] = {
-        m.split("=")[0]: m.split("=")[1]
-        for m in meta_list if "=" in m
-    }
+    meta_dict: dict[str, str] = {}
+    for m in meta_list:
+        if "=" in m:
+            meta_dict[m.split("=")[0]] = m.split("=")[1]
+        else:
+            raise ValueError(f"Metadata '{m}' is invalid")
     return meta_dict
 
 
@@ -117,59 +133,116 @@ def parse_map_file(filepath: str) -> dict[str, Any]:
     }
     try:
         with open(filepath, 'r', encoding='utf-8') as file:
-            for line in file:
-                clean_line: str = line.strip()
-                if not clean_line or clean_line.startswith('#'):
-                    continue
+            parse_count: int = 0
+            for line_num, line in enumerate(file, start=1):
+                try:
+                    clean_line: str = line.strip()
+                    if not clean_line or clean_line.startswith('#'):
+                        continue
 
-                data = clean_line.split(":", 1)
-                if len(data) != 2:
-                    continue
-                prefix: str = data[0].strip()
-                content: str = data[1].strip()
+                    data = clean_line.split(":", 1)
+                    if len(data) != 2:
+                        continue
+                    prefix: str = data[0].strip()
+                    content: str = data[1].strip()
 
-                base_str: str = content
-                meta_str: str = ""
-                if "[" in content:
-                    base_str, meta_str = content.split("[", 1)
-                    meta_str = "[" + meta_str
+                    base_str: str = content
+                    meta_str: str = ""
+                    if "[" in content:
+                        base_str, meta_str = content.split("[", 1)
+                        meta_str = "[" + meta_str
 
-                base_data: list[str] = base_str.split()
+                    base_data: list[str] = base_str.split()
 
-                if (prefix == "start_hub" or prefix == "end_hub"
-                        or prefix == "hub"):
-                    hub_dict: dict[str, Any] = {
-                        "name": base_data[0],
-                        "x": int(base_data[1]),
-                        "y": int(base_data[2])
-                    }
-                    if meta_str:
-                        hub_dict.update(parse_metadata(meta_str))
+                    if (prefix == "start_hub" or prefix == "end_hub"
+                            or prefix == "hub"):
+                        hub_dict: dict[str, Any] = {
+                            "name": base_data[0],
+                            "x": int(base_data[1]),
+                            "y": int(base_data[2])
+                        }
+                        if meta_str:
+                            hub_dict.update(parse_metadata(meta_str))
 
-                    validated_hub = HubData(**hub_dict)
+                        validated_hub = HubData(**hub_dict)
 
-                    if prefix == "hub":
-                        config["hubs"].append(validated_hub)
-                    else:
-                        config[prefix] = validated_hub
+                        if prefix == "hub":
+                            config["hubs"].append(validated_hub)
+                            parse_count += 1
+                        else:
+                            if config[prefix] is None:
+                                config[prefix] = validated_hub
+                                parse_count += 1
+                            else:
+                                raise ValueError(f"More than one {prefix}"
+                                                 f" is present")
 
-                if prefix == "connection":
-                    base_data = [name.strip() for name in base_str.split("-")]
-                    link_dict: dict[str, Any] = {
-                        "hub_1": base_data[0],
-                        "hub_2": base_data[1]
-                    }
-                    if meta_str:
-                        link_dict.update(parse_metadata(meta_str))
+                    if prefix == "connection":
+                        base_data = [name.strip() for name in
+                                     base_str.split("-")]
+                        link_dict: dict[str, Any] = {
+                            "hub_1": base_data[0],
+                            "hub_2": base_data[1]
+                        }
+                        if meta_str:
+                            link_dict.update(parse_metadata(meta_str))
 
-                    validated_link = LinkData(**link_dict)
+                        validated_link = LinkData(**link_dict)
 
-                    config["connections"].append(validated_link)
+                        config["connections"].append(validated_link)
+                        parse_count += 1
 
-                if prefix == "nb_drones":
-                    config["nb_drones"] = int(content)
-    except (ValidationError, ValueError) as e:
-        print(f"Error: {e}")
+                    if prefix == "nb_drones":
+                        if int(content) > 0 and parse_count == 0:
+                            config["nb_drones"] = int(content)
+                            parse_count += 1
+                        else:
+                            raise ValueError("'nb_drones' must be > 0 and"
+                                             "the first data line")
+                except (ValidationError, ValueError, Exception) as e:
+                    print(f"Error on line {line_num}: {e}")
+                    sys.exit(1)
+        _validate_parsed_config(config)
+    except (ValueError, Exception) as e:
+        print(e)
         sys.exit(1)
-
     return config
+
+
+def _validate_parsed_config(config: dict[str, Any]) -> None:
+    """Validates that the parsed configuration contains all required data.
+
+    Checks if:
+        There are one start hub and one end hub.
+        Each zone must have a unique name.
+        Connections must link only previously defined zones using
+            connection: <zone1>-<zone2>[metadata].
+        The same connection must not appear more than once.
+
+    Args:
+        config (dict[str, Any]): The dictionary containing the parsed data.
+
+    Raises:
+        ValueError: If any mandatory information is missing.
+    """
+    if config["start_hub"] is None or config["end_hub"] is None:
+        raise ValueError("start_hub or end_hub is missing")
+    seen_names: set[str] = set()
+    seen_links: set[frozenset[str]] = set()
+    all_hubs: list[HubData] = [config["start_hub"], config["end_hub"]] +\
+        config["hubs"]
+    for hub in all_hubs:
+        if hub.name not in seen_names:
+            seen_names.add(hub.name)
+        else:
+            raise ValueError(f"Hub name '{hub.name}' already exist")
+    for link in config["connections"]:
+        if link.hub_1 not in seen_names or link.hub_2 not in seen_names:
+            raise ValueError(f"Connection '{link.hub_1}-{link.hub_2}'"
+                             " is not valid")
+        else:
+            if frozenset([link.hub_1, link.hub_2]) not in seen_links:
+                seen_links.add(frozenset([link.hub_1, link.hub_2]))
+            else:
+                raise ValueError(f"Connection '{link.hub_1}-{link.hub_2}'"
+                                 " already exists")

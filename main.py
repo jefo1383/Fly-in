@@ -4,6 +4,7 @@ from pathfinding import Pathfinder
 from parsing import parse_arguments, parse_map_file
 from graph import SimulationGUI
 import time
+import tkinter as tk
 
 
 class Simulation:
@@ -75,21 +76,24 @@ class Simulation:
         """Executes the simulation loop until all drones reach the end."""
         self.route_fleet()
         metrics = Metrics(self.drones)
-        while not all(drone.is_arrived for drone in self.drones):
-            metrics.turn_count += 1
-            movements = self._play_turn()
-            if movements:
-                print(" ".join(movements))
-                self.gui.update_logs(metrics.turn_count, movements)
-            self.gui.root.update()
-            time.sleep(0.2)
-        metrics.print_metrics()
-        self.gui.show_final_metrics(metrics.turn_count,
-                                    metrics.total_path_cost,
-                                    (metrics.total_path_cost /
-                                     metrics.turn_count),
-                                    metrics.turns_per_drone)
-        self.gui.root.mainloop()
+        try:
+            while not all(drone.is_arrived for drone in self.drones):
+                metrics.turn_count += 1
+                movements = self._play_turn()
+                if movements:
+                    print(" ".join(movements))
+                    self.gui.update_logs(metrics.turn_count, movements)
+                self.gui.root.update()
+                time.sleep(0.3)
+            metrics.print_metrics()
+            self.gui.show_final_metrics(metrics.turn_count,
+                                        metrics.total_path_cost,
+                                        (metrics.total_path_cost /
+                                         metrics.turn_count),
+                                        metrics.turns_per_drone)
+            self.gui.root.mainloop()
+        except tk.TclError:
+            print("\nProgram interrupted by the user.")
 
 
 class Metrics:

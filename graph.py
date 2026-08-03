@@ -37,14 +37,12 @@ class SimulationGUI:
         self.offset_x: int = 100
         self.offset_y: int = 400
         self.root = tk.Tk()
-        import tkinter.font as tkfont
-        print(tkfont.families())
         self.root.title("Fly-in 42")
         if len(self.network_map.hubs) > 8:
-            self.canvas = tk.Canvas(self.root, height=1000, width=2700,
+            self.canvas = tk.Canvas(self.root, height=1100, width=2700,
                                     bg="white")
         else:
-            self.canvas = tk.Canvas(self.root, height=1000, width=1350,
+            self.canvas = tk.Canvas(self.root, height=1100, width=1350,
                                     bg="white")
         self.canvas.pack()
         hub_sprite = tk.PhotoImage(file="Assets/hub.png")
@@ -190,16 +188,19 @@ class SimulationGUI:
             dx = (tar_coords[0] - curr_x) / frames
             dy = (tar_coords[1] - curr_y) / frames
             positions[m[0]] = (dx, dy)
-        for i in range(frames):
-            for drone, dcoord in positions.items():
-                self.canvas.move(
-                    self.drone_items[drone.drone_id]["img"],
-                    dcoord[0], dcoord[1])
-                self.canvas.move(
-                    self.drone_items[drone.drone_id]["text"],
-                    dcoord[0], dcoord[1])
-            self.root.update()
-            time.sleep(duration / frames)
+        try:
+            for i in range(frames):
+                for drone, dcoord in positions.items():
+                    self.canvas.move(
+                        self.drone_items[drone.drone_id]["img"],
+                        dcoord[0], dcoord[1])
+                    self.canvas.move(
+                        self.drone_items[drone.drone_id]["text"],
+                        dcoord[0], dcoord[1])
+                self.root.update()
+                time.sleep(duration / frames)
+        except tk.TclError:
+            pass
 
     def setup(self, drones: list[Drone]) -> None:
         """Initializes the visual elements on the canvas in the correct order.
@@ -227,7 +228,7 @@ class SimulationGUI:
                                                  "bold"))
         self.canvas.create_window(
             int(self.canvas.cget("width")) // 2,
-            850, window=self.log_widget, width=int(self.canvas.cget("width")),
+            950, window=self.log_widget, width=int(self.canvas.cget("width")),
             height=300)
 
     def update_logs(self, turn: int, logs: list[str]) -> None:
