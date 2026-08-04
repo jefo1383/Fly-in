@@ -21,7 +21,7 @@ install: setup_env
 	uv sync
 
 run:
-	uv run --python $(PYTHON_MAMBA) main.py $(MAP)
+	uv run --python $(PYTHON_MAMBA) main.py $(MAP) $(FLAG)
 
 debug:
 	uv run --python $(PYTHON_MAMBA) -m pdb main.py $(MAP)

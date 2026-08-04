@@ -109,8 +109,8 @@ class Pathfinder:
 
         while queue:
             current_time, current_pos = queue.popleft()
-        #    if current_time > 1000:
-        #        return None
+            if current_time > 1000:
+                return None
             if current_pos == end_hub:
                 path: list[Hub | Link] = []
                 curr_state: tuple[int, Hub | Link] = (current_time,

@@ -10,6 +10,7 @@ from parsing import parse_arguments, parse_map_file
 from graph import SimulationGUI
 import time
 import tkinter as tk
+import sys
 
 
 class Simulation:
@@ -45,12 +46,16 @@ class Simulation:
         finds the optimal path for each, and registers it in the
         shared calendar.
         """
-        solver = Pathfinder(self.network_map)
+        self.solver = Pathfinder(self.network_map)
         for drone in self.drones:
-            path = solver.find_path(drone.start_hub, drone.end_hub)
+            path = self.solver.find_path(drone.start_hub, drone.end_hub)
             if path:
-                solver.book_path(path)
+                self.solver.book_path(path)
                 drone.path = path
+            else:
+                print(f"Error: Disconnected graph or capacity bottleneck.\n"
+                      f"No valid path found for drone {drone.drone_id}.")
+                sys.exit(1)
 
     def _play_turn(self) -> list[str]:
         """Execute a single simulation turn for all drones.
@@ -62,6 +67,7 @@ class Simulation:
         res: list[str] = []
         drones_count: dict[Hub | Link, int] = {}
         moves: list[tuple[Drone, Hub | Link, int]] = []
+
         for drone in self.drones:
             if not drone.is_arrived:
                 target = drone.path.pop(0)
@@ -72,6 +78,7 @@ class Simulation:
                 drones_count[target] = overlap_index + 1
                 moves.append((drone, target, overlap_index))
                 drone.move(target)
+
         self.gui.animate_drones(moves)
         for m in moves:
             self.gui.update_drone(m[0].drone_id, m[1], m[2])

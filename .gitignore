@@ -4,3 +4,4 @@ mypy*
 uv.lock
 .venv
 *.txt
+live_coding.md
