@@ -43,3 +43,6 @@ lint:
 lint-strict:
 	uv run flake8 . --exclude=.venv
 	uv run mypy . --strict
+
+doc:
+	uv run pydocstyle

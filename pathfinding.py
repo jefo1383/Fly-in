@@ -1,3 +1,8 @@
+"""All the pathfinding logic.
+
+Contains the main pathfinder class Pathfinder which
+calculate and book path for all the drones.
+"""
 from drone_map_models import Map
 from hub_link_models import Hub, Link
 from typing import Optional
@@ -5,7 +10,7 @@ from collections import deque
 
 
 class Pathfinder:
-    """Handles advanced routing for the drone fleet
+    """Handle advanced routing for the drone fleet\
     using time-space reservations.
 
     Attributes:
@@ -15,7 +20,7 @@ class Pathfinder:
     """
 
     def __init__(self, network_map: Map) -> None:
-        """Initializes the pathfinder with the map and an empty schedule.
+        """Initialize the pathfinder with the map and an empty schedule.
 
         Args:
             network_map (Map): The map containing hubs and links.
@@ -30,7 +35,7 @@ class Pathfinder:
         current_pos: Hub | Link,
         came_from: dict[tuple[int, Hub | Link], tuple[int, Hub | Link] | None]
     ) -> list[Hub | Link]:
-        """Determines all valid next positions for a given state.
+        """Determine all valid next positions for a given state.
 
         Args:
             current_time (int): The current turn number.
@@ -82,7 +87,7 @@ class Pathfinder:
 
     def find_path(self, start_hub: Hub, end_hub: Hub,
                   start_time: int = 0) -> Optional[list[Hub | Link]]:
-        """Finds a spatio-temporal path for a single drone.
+        """Find a spatio-temporal path for a single drone.
 
         Uses a Breadth-First Search (BFS) approach adapted for time,
         checking the shared calendar to avoid capacity conflicts.
@@ -133,7 +138,7 @@ class Pathfinder:
         return None
 
     def book_path(self, path: list[Hub | Link], start_time: int = 0) -> None:
-        """Registers a computed path into the shared calendar
+        """Register a computed path into the shared calendar\
         to prevent collisions.
 
         Args:

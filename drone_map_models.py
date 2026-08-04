@@ -18,7 +18,7 @@ class Drone:
 
     def __init__(self, drone_id: str, start_hub: StartHub,
                  end_hub: EndHub) -> None:
-        """Initializes a Drone with an ID and starting position.
+        """Initialize a Drone with an ID and starting position.
 
         Args:
             drone_id (str): The unique identifier for the drone.
@@ -33,7 +33,7 @@ class Drone:
         self.path: list[Hub | Link] = []
 
     def move(self, target: Hub | Link) -> None:
-        """Moves the drone to the specified target.
+        """Move the drone to the specified target.
 
         Handles the logic for updating the drone's current position,
         and updating the arrival status.
@@ -51,9 +51,16 @@ class Drone:
 
 
 class Map:
+    """Represent a map given in argument.
+
+    Attributes:
+        nb_drones: the total number of drones on the map.
+        hubs: the list of hubs on the map.
+        adjacency: the list of each hub neighbours.
+    """
 
     def __init__(self, config: dict[str, Any]) -> None:
-        """Initializes the network map from a configuration dictionary.
+        """Initialize the network map from a configuration dictionary.
 
         Args:
             config (dict[str, Any]): The parsed configuration containing
@@ -67,7 +74,7 @@ class Map:
         self._build_links(config)
 
     def _build_hubs(self, config: dict[str, Any]) -> None:
-        """Instantiates Hub objects and adds them to the map.
+        """Instantiate Hub objects and adds them to the map.
 
         Args:
             config (dict[str, Any]): The parsed configuration.
@@ -116,7 +123,7 @@ class Map:
             self.adjacency[new_hub.name] = []
 
     def _build_links(self, config: dict[str, Any]) -> None:
-        """Instantiates Link objects and builds the adjacency list.
+        """Instantiate Link objects and builds the adjacency list.
 
         Args:
             config (dict[str, Any]): The parsed configuration.

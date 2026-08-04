@@ -1,3 +1,4 @@
+"""Class and methods for visual representation."""
 import tkinter as tk
 from drone_map_models import Map, Drone
 from hub_link_models import StartHub, EndHub, Hub, Link
@@ -5,7 +6,7 @@ import time
 
 
 class SimulationGUI:
-    """Handles the graphical user interface using sprites.
+    """Handle the graphical user interface using sprites.
 
     Attributes:
         network_map (Map): The map containing hubs and links.
@@ -21,7 +22,7 @@ class SimulationGUI:
     """
 
     def __init__(self, network_map: Map, scale: int = 150) -> None:
-        """Initializes the GUI, canvas, and loads sprites.
+        """Initialize the GUI, canvas, and loads sprites.
 
         Args:
             network_map (Map): The parsed map to be displayed.
@@ -53,13 +54,12 @@ class SimulationGUI:
         self.drone_sprite = drone_sprite.subsample(6, 6)
 
     def _draw_hubs(self) -> None:
-        """Draws all hubs from the network map onto the canvas.
+        """Draw all hubs from the network map onto the canvas.
 
         Iterates through the map's hubs, calculates their pixel
         coordinates using the scale factor, draws a colored background,
         and overlays the corresponding sprite.
         """
-
         for hub in self.network_map.hubs.values():
 
             x_px = (hub.x * self.scale) + self.offset_x
@@ -92,12 +92,11 @@ class SimulationGUI:
                 self.canvas.create_image(x_px, y_px, image=self.hub_sprite)
 
     def _draw_links(self) -> None:
-        """Draws straight lines between connected hubs.
+        """Draw straight lines between connected hubs.
 
         Iterates through the network adjacency list and uses the canvas
         to draw direct lines connecting hub_1 and hub_2 for each link
         """
-
         drawn_links: set[str] = set()
 
         for list_link in self.network_map.adjacency.values():
@@ -115,7 +114,7 @@ class SimulationGUI:
                                             fill="lightgreen", width=7)
 
     def _init_drones(self, drones: list[Drone]) -> None:
-        """Draws drones and their text IDs at the starting hub.
+        """Draw drones and their text IDs at the starting hub.
 
         Saves their Tkinter IDs in self.drone_items using a nested
         dictionary structure.
@@ -123,7 +122,6 @@ class SimulationGUI:
         Args:
             drones (list[Drone]): The list of drones on the map.
         """
-
         x_px = (self.network_map.start_hub.x * self.scale) + self.offset_x
         y_px = (self.network_map.start_hub.y * self.scale) + self.offset_y
         for drone in drones:
@@ -137,7 +135,7 @@ class SimulationGUI:
 
     def update_drone(self, drone_id: str, target: Hub | Link,
                      overlap_index: int = 0) -> None:
-        """Updates the position of a specific drone on the canvas.
+        """Update the position of a specific drone on the canvas.
 
         Retrieves the drone's Tkinter ID, calculates its new pixel
         coordinates based on whether the target is a Hub or a Link,
@@ -172,7 +170,7 @@ class SimulationGUI:
 
     def animate_drones(self, moves: list[tuple[Drone, Hub | Link, int]],
                        frames: int = 25, duration: float = 0.4) -> None:
-        """Animates multiple drones moving to their targets simultaneously.
+        """Animate multiple drones moving to their targets simultaneously.
 
         Args:
             moves (list[tuple[Drone, Hub | Link, int]]): A list of tuples
@@ -203,7 +201,7 @@ class SimulationGUI:
             pass
 
     def setup(self, drones: list[Drone]) -> None:
-        """Initializes the visual elements on the canvas in the correct order.
+        """Initialize the visual elements on the canvas in the correct order.
 
         Draws the links first (background), then the hubs (middle ground),
         and finally places the drones at the starting hub (foreground).
@@ -217,7 +215,7 @@ class SimulationGUI:
         self._init_ui_elements()
 
     def _init_ui_elements(self) -> None:
-        """Initializes the UI elements for metrics and logs.
+        """Initialize the UI elements for metrics and logs.
 
         Creates a Text widget for scrolling logs and embeds it in the canvas.
         Prepares the dictionary for other UI items.
@@ -232,7 +230,7 @@ class SimulationGUI:
             height=300)
 
     def update_logs(self, turn: int, logs: list[str]) -> None:
-        """Appends the current turn's movements to the log widget.
+        """Append the current turn's movements to the log widget.
 
         Args:
             turn (int): The current turn number.
@@ -249,7 +247,7 @@ class SimulationGUI:
         avg_moves: float,
         avg_drone: float
     ) -> None:
-        """Appends the final simulation metrics to the log widget.
+        """Append the final simulation metrics to the log widget.
 
         Args:
             score (int): Total number of turns.

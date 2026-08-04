@@ -1,3 +1,4 @@
+"""Parsing methods and pydantic classes."""
 import argparse
 from pydantic import BaseModel, Field, ValidationError, field_validator
 from typing import Any, Literal
@@ -5,7 +6,7 @@ import sys
 
 
 class HubData(BaseModel):
-    """Validates raw hub data extracted from the map file.
+    """Validate raw hub data extracted from the map file.
 
     Attributes:
         name (str): The unique identifier of the hub.
@@ -16,6 +17,7 @@ class HubData(BaseModel):
         color (str): The optional hub color.
         max_drones (int): Maximum drones allowed.
     """
+
     name: str = Field(pattern=r"^[^\-\s]+$")
     x: int
     y: int
@@ -27,7 +29,7 @@ class HubData(BaseModel):
     @field_validator('color')
     @classmethod
     def process_color(cls, v: str) -> str:
-        """Intercepte et gère les couleurs non supportées par Tkinter."""
+        """Intercept and handle colors for Tkinter."""
         val = v.lower()
         if val == "rainbow":
             print("Color 'rainbow' has been changed to: 'lightpink'")
@@ -36,7 +38,7 @@ class HubData(BaseModel):
 
 
 class LinkData(BaseModel):
-    """Validates raw connection data extracted from the map file.
+    """Validate raw connection data extracted from the map file.
 
     Attributes:
         hub_1 (str): The name of the first connected hub.
@@ -44,13 +46,14 @@ class LinkData(BaseModel):
         max_link_capacity (int): Maximum drones allowed
         on the link simultaneously.
     """
+
     hub_1: str
     hub_2: str
     max_link_capacity: int = Field(ge=1, default=1)
 
 
 def _valid_txt_file(filepath: str) -> str:
-    """Validates that the provided filepath has a .txt extension.
+    """Validate that the provided filepath has a .txt extension.
 
     Args:
         filepath (str): The path to check.
@@ -69,7 +72,7 @@ def _valid_txt_file(filepath: str) -> str:
 
 
 def parse_arguments() -> str:
-    """Parses command-line arguments to get the map file path.
+    """Parse command-line arguments to get the map file path.
 
     Returns:
         str: The path to the simulation map file.
@@ -85,7 +88,7 @@ def parse_arguments() -> str:
 
 
 def parse_metadata(metadata_str: str) -> dict[str, str]:
-    """Parses the optional metadata string into a dictionary.
+    """Parse the optional metadata string into a dictionary.
 
     Args:
         metadata_str (str): The metadata string enclosed in brackets,
@@ -108,7 +111,7 @@ def parse_metadata(metadata_str: str) -> dict[str, str]:
 
 
 def parse_map_file(filepath: str) -> dict[str, Any]:
-    """Parses the input simulation file.
+    """Parse the input simulation file.
 
     Reads the file line by line, extracting the number of drones,
     hubs data and connection data.
@@ -210,7 +213,7 @@ def parse_map_file(filepath: str) -> dict[str, Any]:
 
 
 def _validate_parsed_config(config: dict[str, Any]) -> None:
-    """Validates that the parsed configuration contains all required data.
+    """Validate that the parsed configuration contains all required data.
 
     Checks if:
         There are one start hub and one end hub.

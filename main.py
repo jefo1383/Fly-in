@@ -1,3 +1,8 @@
+"""Contain the engine of the drone routing.
+
+Simulation class, metrics class, and methods which calculate paths,
+execute one turn, and the main loop for entry point program.
+"""
 from drone_map_models import Map, Drone
 from hub_link_models import Hub, Link
 from pathfinding import Pathfinder
@@ -17,7 +22,7 @@ class Simulation:
     """
 
     def __init__(self, network_map: Map) -> None:
-        """Initializes the simulation with the given map and drones.
+        """Initialize the simulation with the given map and drones.
 
         Args:
             network_map (Map): The parsed map containing hubs and links.
@@ -34,7 +39,7 @@ class Simulation:
         self.gui.setup(self.drones)
 
     def route_fleet(self) -> None:
-        """Calculates and books paths for the entire fleet of drones.
+        """Calculate and books paths for the entire fleet of drones.
 
         Instantiates the Pathfinder, iterates through all drones,
         finds the optimal path for each, and registers it in the
@@ -48,7 +53,7 @@ class Simulation:
                 drone.path = path
 
     def _play_turn(self) -> list[str]:
-        """Executes a single simulation turn for all drones.
+        """Execute a single simulation turn for all drones.
 
         Returns:
             list[str]: A list of movement strings formatted as
@@ -73,7 +78,7 @@ class Simulation:
         return res
 
     def run(self) -> None:
-        """Executes the simulation loop until all drones reach the end."""
+        """Execute the simulation loop until all drones reach the end."""
         self.route_fleet()
         metrics = Metrics(self.drones)
         try:
@@ -97,15 +102,16 @@ class Simulation:
 
 
 class Metrics:
-    """Calculates and stores simulation performance metrics.
+    """Calculate and stores simulation performance metrics.
 
     Attributes:
         drones (list[Drone]): The fleet of drones to analyze.
         nb_drones (int): The total number of drones in the fleet.
         total_path_cost (int): The sum of all turns spent by all drones.
     """
+
     def __init__(self, drones: list[Drone]) -> None:
-        """Initializes the metrics based on the initial drone paths.
+        """Initialize the metrics based on the initial drone paths.
 
         Args:
             drones (list[Drone]): The fleet of drones with their
@@ -120,8 +126,9 @@ class Metrics:
         self.turns_per_drone: float = self.total_path_cost / self.nb_drones
 
     def print_metrics(self) -> None:
-        """Displays the calculated metrics to the console
-        and visual representation.
+        """Display the calculated metrics.
+
+        Print logs the console and visual representation.
         """
         print(f"\nScore: {self.turn_count} turns")
         print(f"Total path cost: {self.total_path_cost} movements")
