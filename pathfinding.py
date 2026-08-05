@@ -58,8 +58,13 @@ class Pathfinder:
                 else:
                     target = link.hub_2
                 if target.zone in ("normal", "priority", "end_hub"):
-                    if (self.calendar.get(current_time + 1, {}).get(target, 0)
-                            < target.max_drones):
+                    if (
+                        (self.calendar.get(current_time + 1, {}).get(target, 0)
+                            < target.max_drones)
+                        and
+                        (self.calendar.get(current_time + 1, {}).get(link, 0)
+                         < link.max_link_capacity)
+                    ):
                         valid_moves.append(target)
                 elif target.zone == "restricted":
                     if (
@@ -137,17 +142,30 @@ class Pathfinder:
                     came_from[new_state] = (current_time, current_pos)
         return None
 
-    def book_path(self, path: list[Hub | Link], start_time: int = 0) -> None:
+    def book_path(self, path: list[Hub | Link], start_node: Hub | Link,
+                  start_time: int = 0) -> None:
         """Register a computed path into the shared calendar\
         to prevent collisions.
 
         Args:
             path (list[Hub | Link]): The sequence of locations
             the drone will traverse.
+            start_node (Hub | Link): The position of the drone before moving.
             start_time (int): The turn number when the drone
             begins its journey.
         """
+        prev_node = start_node
+
         for time, node in enumerate(path, start_time + 1):
             self.calendar.setdefault(time, {})
             nb_drones = self.calendar[time].get(node, 0)
             self.calendar[time][node] = nb_drones + 1
+
+            if (prev_node != node and isinstance(prev_node, Hub)
+                    and isinstance(node, Hub)):
+                for link in self.network_map.adjacency[prev_node.name]:
+                    if link.hub_1 == node or link.hub_2 == node:
+                        tmp_drones = self.calendar[time].get(link, 0)
+                        self.calendar[time][link] = tmp_drones + 1
+                        break
+            prev_node = node

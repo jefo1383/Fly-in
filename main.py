@@ -50,7 +50,7 @@ class Simulation:
         for drone in self.drones:
             path = self.solver.find_path(drone.start_hub, drone.end_hub)
             if path:
-                self.solver.book_path(path)
+                self.solver.book_path(path, drone.start_hub)
                 drone.path = path
             else:
                 print(f"Error: Disconnected graph or capacity bottleneck.\n"
