@@ -3,7 +3,7 @@
 PYTHON_MAMBA = /goinfre/$(USER)/micromamba/envs/flyin_env/bin/python
 MAMBA_BIN = /goinfre/$(USER)/bin/micromamba
 
-setup_env:
+setup_env_42:
 	@echo "Vérification et configuration de Micromamba..."; \
 	if ! command -v micromamba >/dev/null 2>&1 && [ ! -f "$(MAMBA_BIN)" ]; then \
 		echo "Téléchargement de Micromamba..."; \
@@ -16,7 +16,7 @@ setup_env:
 		$$BIN_TO_USE create -y -p /goinfre/$(USER)/micromamba/envs/flyin_env -c conda-forge python=3.13 tk; \
 	fi
 
-install: setup_env
+install:
 	@which uv > /dev/null 2>&1 || pip install --user uv
 	uv sync
 
