@@ -2,6 +2,8 @@
 
 # Fly-in: Autonomous Drone Fleet Routing System
 
+https://github.com/user-attachments/assets/2a2ac562-5e68-434f-beac-4b0000b70450
+
 ## Description
 
 **Fly-in** is an autonomous drone routing simulation system developed in Python 3.13 as part of the 42 common core. The objective of the project is to navigate a fleet of drones through a dynamic network of interconnected zones (represented as a graph) from a starting hub (`start_hub`) to a destination hub (`end_hub`) in the fewest possible simulation turns.
